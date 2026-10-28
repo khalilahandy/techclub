@@ -1,0 +1,652 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Country Explorer | Discover the World</title>
+
+  <link rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+
+  <style>
+    :root {
+      --green: #087f5b;
+      --dark-green: #07533f;
+      --blue: #eaf4ff;
+      --white: #ffffff;
+      --text: #183b36;
+      --gray: #70827c;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4faf7;
+      color: var(--text);
+    }
+
+    header {
+      background: var(--white);
+      padding: 20px 7%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid #e1ece6;
+    }
+
+    .logo {
+      color: var(--green);
+      font-size: 23px;
+      font-weight: bold;
+    }
+
+    .hero {
+      padding: 55px 7% 40px;
+      background: linear-gradient(120deg, #e1f5e9, #e8f3ff);
+    }
+
+    .hero h1 {
+      font-size: clamp(32px, 5vw, 48px);
+      margin-bottom: 15px;
+      line-height: 1.2;
+    }
+
+    .hero h1 span {
+      color: var(--green);
+    }
+
+    .hero p {
+      color: #5e746b;
+      max-width: 600px;
+      line-height: 1.7;
+    }
+
+    .content {
+      padding: 35px 7% 60px;
+    }
+
+    .section-title {
+      margin-bottom: 20px;
+    }
+
+    .section-title h2 {
+      font-size: 24px;
+      margin-bottom: 8px;
+    }
+
+    .section-title p {
+      color: var(--gray);
+      font-size: 14px;
+    }
+
+    .search {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 22px;
+      max-width: 500px;
+    }
+
+    .search input {
+      flex: 1;
+      min-width: 0;
+      padding: 13px 15px;
+      border: 1px solid #dce8e1;
+      border-radius: 10px;
+      font-size: 14px;
+      outline-color: var(--green);
+    }
+
+    .search button {
+      background: var(--green);
+      color: white;
+      border: none;
+      padding: 12px 20px;
+      border-radius: 10px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .search button:hover {
+      background: var(--dark-green);
+    }
+
+    .dashboard {
+      display: grid;
+      grid-template-columns: 1.6fr 1fr;
+      gap: 22px;
+      align-items: stretch;
+    }
+
+    .card {
+      background: white;
+      border-radius: 16px;
+      overflow: hidden;
+      border: 1px solid #e2ece6;
+      box-shadow: 0 8px 25px #183b360b;
+    }
+
+    .card-heading {
+      padding: 18px 20px;
+      font-weight: bold;
+      border-bottom: 1px solid #edf1ef;
+    }
+
+    #map {
+      height: 470px;
+      width: 100%;
+      background: #e5f2fa;
+    }
+
+    .map-tip {
+      padding: 14px 20px;
+      color: var(--gray);
+      font-size: 12px;
+      line-height: 1.6;
+    }
+
+    .country-details {
+      padding: 24px;
+    }
+
+    .label {
+      color: var(--green);
+      text-transform: uppercase;
+      font-size: 11px;
+      font-weight: bold;
+      letter-spacing: 1.5px;
+      margin-bottom: 20px;
+    }
+
+    .flag {
+      background: var(--blue);
+      border-radius: 12px;
+      height: 160px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 22px;
+      overflow: hidden;
+    }
+
+    .flag img {
+      max-width: 80%;
+      max-height: 120px;
+      object-fit: contain;
+      box-shadow: 0 4px 12px #00000015;
+    }
+
+    .country-details h2 {
+      font-size: 27px;
+      margin-bottom: 8px;
+      overflow-wrap: anywhere;
+    }
+
+    .official-name {
+      font-size: 12px;
+      color: var(--gray);
+      margin-bottom: 20px;
+      line-height: 1.6;
+    }
+
+    .info {
+      display: flex;
+      align-items: center;
+      gap: 13px;
+      border-top: 1px solid #e8efeb;
+      padding: 17px 0;
+    }
+
+    .info-icon {
+      background: #e4f5ed;
+      width: 42px;
+      height: 42px;
+      display: grid;
+      place-items: center;
+      border-radius: 11px;
+      font-size: 20px;
+      flex-shrink: 0;
+    }
+
+    .info-label {
+      color: var(--gray);
+      font-size: 12px;
+      margin-bottom: 5px;
+    }
+
+    .info-value {
+      color: #173f65;
+      font-size: 17px;
+      font-weight: bold;
+      overflow-wrap: anywhere;
+    }
+
+    #message {
+      color: #b23b3b;
+      font-size: 13px;
+      line-height: 1.6;
+      margin-top: 12px;
+    }
+
+    footer {
+      background: var(--dark-green);
+      color: white;
+      text-align: center;
+      padding: 25px 7%;
+      font-size: 13px;
+      line-height: 1.8;
+    }
+
+    footer a {
+      color: #b8efd1;
+    }
+
+    @media (max-width: 800px) {
+      .dashboard {
+        grid-template-columns: 1fr;
+      }
+
+      #map {
+        height: 380px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      header {
+        padding: 18px 5%;
+      }
+
+      .hero, .content {
+        padding-left: 5%;
+        padding-right: 5%;
+      }
+
+      .logo {
+        font-size: 19px;
+      }
+
+      #map {
+        height: 330px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <header>
+    <div class="logo">🌍 Country Explorer</div>
+    <div>Discover the world</div>
+  </header>
+
+  <section class="hero">
+    <h1>Explore the world.<br><span>One click at a time.</span></h1>
+    <p>
+      Discover countries around the world using our interactive map.
+      Click any country to explore its national flag, capital city,
+      and population.
+    </p>
+  </section>
+
+  <main class="content">
+    <div class="section-title">
+      <h2>Discover a country</h2>
+      <p>Click on the map or search for a country by name.</p>
+    </div>
+
+    <form class="search" id="searchForm">
+      <input
+        type="search"
+        id="searchInput"
+        placeholder="Search a country, e.g. Malaysia"
+        aria-label="Search for a country"
+      >
+      <button type="submit">Search</button>
+    </form>
+
+    <div class="dashboard">
+
+      <section class="card">
+        <div class="card-heading">🗺️ Interactive World Map</div>
+        <div id="map"></div>
+        <div class="map-tip">
+          💡 Click a country to view its details. Zoom in or out
+          to explore different parts of the world.
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="country-details">
+          <div class="label">Country Profile</div>
+
+          <div class="flag" id="flag">
+            <span style="font-size:55px">🌍</span>
+          </div>
+
+          <h2 id="countryName">Welcome, Explorer!</h2>
+          <p class="official-name" id="officialName">
+            Select a country on the map to get started.
+          </p>
+
+          <div class="info">
+            <div class="info-icon">🏛️</div>
+            <div>
+              <div class="info-label">Capital City</div>
+              <div class="info-value" id="capital">—</div>
+            </div>
+          </div>
+
+          <div class="info">
+            <div class="info-icon">👥</div>
+            <div>
+              <div class="info-label">Population</div>
+              <div class="info-value" id="population">—</div>
+            </div>
+          </div>
+
+          <p id="message" role="status"></p>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <footer>
+    <strong>Country Explorer</strong> — Discover our amazing world 🌎
+    <br>
+    Map data ©
+    <a href="https://www.openstreetmap.org/copyright"
+       target="_blank" rel="noopener">OpenStreetMap</a>
+    · Country data:
+    <a href="https://restcountries.com/"
+       target="_blank" rel="noopener">REST Countries</a>
+  </footer>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <script>
+    // Create the world map.
+    const map = L.map("map").setView([20, 0], 2);
+
+    // Add the map background.
+    L.tileLayer(
+      "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",
+      {
+        attribution:
+          '&copy; OpenStreetMap &copy; <a href="https://carto.com/">CARTO</a>',
+        subdomains: "abcd",
+        maxZoom: 19
+      }
+    ).addTo(map);
+
+    const normalStyle = {
+      color: "#ffffff",
+      weight: 1,
+      fillColor: "#39a77d",
+      fillOpacity: 0.65
+    };
+
+    const hoverStyle = {
+      color: "#07533f",
+      weight: 2,
+      fillColor: "#a0e7c5",
+      fillOpacity: 0.9
+    };
+
+    const selectedStyle = {
+      color: "#07533f",
+      weight: 2,
+      fillColor: "#087f5b",
+      fillOpacity: 0.95
+    };
+
+    let geoLayer;
+    let selectedLayer = null;
+    let countryFeatures = [];
+    let latestRequest = 0;
+
+    const $ = id => document.getElementById(id);
+
+    function countryName(feature) {
+      const p = feature.properties || {};
+      return p.ADMIN || p.name || p.NAME || p.name_en || "Unknown";
+    }
+
+    function countryCode(feature) {
+      const p = feature.properties || {};
+      return p["ISO3166-1-Alpha-3"] ||
+             p.ISO_A3 ||
+             p.ADM0_A3 ||
+             p.iso_a3 ||
+             "";
+    }
+
+    function formatPopulation(number) {
+      if (typeof number !== "number" || !Number.isFinite(number)) {
+        return "Not available";
+      }
+      return new Intl.NumberFormat("en-US").format(number);
+    }
+
+    function resetSelection() {
+      if (selectedLayer && geoLayer) {
+        geoLayer.resetStyle(selectedLayer);
+      }
+      selectedLayer = null;
+    }
+
+    function showError(message) {
+      $("message").textContent = message;
+    }
+
+    async function showCountry(feature) {
+      const requestId = ++latestRequest;
+      const name = countryName(feature);
+      const code = countryCode(feature);
+
+      $("countryName").textContent = name;
+      $("officialName").textContent = "Loading country information...";
+      $("capital").textContent = "Loading...";
+      $("population").textContent = "Loading...";
+      $("flag").innerHTML = '<span style="font-size:55px">🌍</span>';
+      $("message").textContent = "";
+
+      try {
+        let country = null;
+
+        // First try the ISO country code.
+        if (code && code !== "-99") {
+          const response = await fetch(
+            "https://restcountries.com/v3.1/alpha/" +
+            encodeURIComponent(code) +
+            "?fields=name,capital,population,flags,cca3"
+          );
+
+          if (response.ok) {
+            const result = await response.json();
+            country = Array.isArray(result) ? result[0] : result;
+          }
+        }
+
+        // Fall back to searching by country name.
+        if (!country) {
+          const response = await fetch(
+            "https://restcountries.com/v3.1/name/" +
+            encodeURIComponent(name) +
+            "?fields=name,capital,population,flags,cca3"
+          );
+
+          if (!response.ok) {
+            throw new Error("Country information is unavailable.");
+          }
+
+          const results = await response.json();
+
+          country = results.find(item =>
+            item.name?.common?.toLowerCase() === name.toLowerCase()
+          ) || results[0];
+        }
+
+        if (requestId !== latestRequest) return;
+
+        if (!country) {
+          throw new Error("Country information was not found.");
+        }
+
+        $("countryName").textContent =
+          country.name?.common || name;
+
+        $("officialName").textContent =
+          country.name?.official || "Official name unavailable";
+
+        $("capital").textContent =
+          country.capital?.join(", ") || "Not available";
+
+        $("population").textContent =
+          formatPopulation(country.population);
+
+        const flagUrl = country.flags?.svg || country.flags?.png;
+
+        $("flag").innerHTML = "";
+
+        if (flagUrl) {
+          const img = document.createElement("img");
+          img.src = flagUrl;
+          img.alt = "Flag of " + name;
+          $("flag").appendChild(img);
+        } else {
+          $("flag").textContent = "🏳️";
+        }
+
+      } catch (error) {
+        if (requestId !== latestRequest) return;
+
+        $("capital").textContent = "Not available";
+        $("population").textContent = "Not available";
+        showError(
+          "Unable to load country data. Please check your internet " +
+          "connection and try again."
+        );
+
+        console.error(error);
+      }
+    }
+
+    function onEachCountry(feature, layer) {
+      layer.bindTooltip(countryName(feature), {
+        sticky: true
+      });
+
+      layer.on({
+        mouseover: function(event) {
+          if (event.target !== selectedLayer) {
+            event.target.setStyle(hoverStyle);
+          }
+        },
+
+        mouseout: function(event) {
+          if (event.target !== selectedLayer && geoLayer) {
+            geoLayer.resetStyle(event.target);
+          }
+        },
+
+        click: function(event) {
+          L.DomEvent.stopPropagation(event);
+
+          resetSelection();
+          selectedLayer = event.target;
+          selectedLayer.setStyle(selectedStyle);
+          selectedLayer.bringToFront();
+
+          showCountry(feature);
+        }
+      });
+    }
+
+    async function loadMap() {
+      try {
+        const response = await fetch(
+          "https://raw.githubusercontent.com/datasets/geo-countries/master/data/countries.geojson"
+        );
+
+        if (!response.ok) {
+          throw new Error("World map data could not be loaded.");
+        }
+
+        const data = await response.json();
+        countryFeatures = data.features || [];
+
+        geoLayer = L.geoJSON(data, {
+          style: () => normalStyle,
+          onEachFeature: onEachCountry
+        }).addTo(map);
+
+      } catch (error) {
+        showError(
+          "The map could not be loaded. Please refresh the page " +
+          "and check your internet connection."
+        );
+        console.error(error);
+      }
+    }
+
+    function searchCountry(query) {
+      const term = query.trim().toLowerCase();
+
+      if (!term) return;
+
+      if (!geoLayer || !countryFeatures.length) {
+        showError("The map is still loading. Please wait.");
+        return;
+      }
+
+      const matches = countryFeatures.filter(feature =>
+        countryName(feature).toLowerCase().includes(term)
+      );
+
+      if (!matches.length) {
+        showError("Country not found. Please check the spelling.");
+        return;
+      }
+
+      const feature = matches.find(item =>
+        countryName(item).toLowerCase() === term
+      ) || matches[0];
+
+      const layer = geoLayer.getLayers().find(item =>
+        item.feature === feature
+      );
+
+      if (!layer) {
+        showError("Unable to select this country.");
+        return;
+      }
+
+      resetSelection();
+      selectedLayer = layer;
+      selectedLayer.setStyle(selectedStyle);
+      selectedLayer.bringToFront();
+
+      map.fitBounds(layer.getBounds(), {
+        padding: [25, 25],
+        maxZoom: 5
+      });
+
+      showCountry(feature);
+    }
+
+    $("searchForm").addEventListener("submit", event => {
+      event.preventDefault();
+      searchCountry($("searchInput").value);
+    });
+
+    loadMap();
+  </script>
+
+</body>
+</html>
